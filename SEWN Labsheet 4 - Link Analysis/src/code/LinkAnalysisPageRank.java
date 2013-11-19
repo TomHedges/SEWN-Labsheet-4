@@ -4,7 +4,9 @@
  */
 package code;
 
+import java.io.BufferedReader;
 import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
@@ -73,11 +75,92 @@ public class LinkAnalysisPageRank {
 			}
 		}
 
-		adjacencyMatrix = adjacencyMatrix.substring(0, adjacencyMatrix.length()-1) + System.getProperty("line.separator");
+		adjacencyMatrix = adjacencyMatrix + "Dangling URLs" + System.getProperty("line.separator");
+
+		String zeroBuilder = "";
+	    for (int loopCounter = 0; loopCounter < urlsInCrawlFile.size()+1; loopCounter++) {
+	    	zeroBuilder = zeroBuilder + ",0";
+	    }
 		
 	    for (String url : urlsInCrawlFile) {
-	    	adjacencyMatrix = adjacencyMatrix + url + System.getProperty("line.separator");
+	    	adjacencyMatrix = adjacencyMatrix + url + zeroBuilder + System.getProperty("line.separator");
 	    }
+
+		crawlData = new Scanner(this.accessURL());
+		int iVisitedPos = 0;
+		int iLinkPos = 0;
+		String strVisitedURL = "";
+		String strLinkURL = "";
+		
+		while (crawlData.hasNextLine()) {
+			String strCrawlFileLine = crawlData.nextLine();
+			
+			// if t x
+			if (strCrawlFileLine.trim().startsWith("Link:")) {
+				strLinkURL = strCrawlFileLine.trim().replace("Link: ", "");
+
+				iLinkPos = urlsInCrawlFile.indexOf(strLinkURL);
+				
+				// if link url is not in visited list, then this url is 'dangling' 
+				if (iLinkPos == -1) {
+					//adjacencyMatrix.indexOf(strVisitedURL, 1);
+					
+					int linkCounter = 0;
+					
+					try {
+						BufferedReader reader = new BufferedReader(new FileReader("matrix.csv"));
+						
+						String temp = "";
+						String newFileText = "";
+						int loopCounter = 0;
+						
+						//for (int loopCounter = 0; loopCounter <= iVisitedPos+1; loopCounter++) {
+						while ((temp = reader.readLine()) != null) {	
+							//temp = reader.readLine();
+							loopCounter++;
+							
+							if (loopCounter == (iVisitedPos+2)) {
+								linkCounter = Integer.parseInt(temp.substring(temp.lastIndexOf(",")+1));
+								//temp = temp.substring(temp.lastIndexOf(",")+1);
+								
+								linkCounter = linkCounter + 1;
+
+				                String tokens[] = temp.split(",");
+				                tokens[tokens.length-1] = String.valueOf(linkCounter);
+				                
+				                temp = "";
+				                for (String token : tokens) {
+				                	temp = temp + token + ",";
+				                }
+				                temp = temp.substring(0, temp.length()-1);
+							}
+							
+							newFileText = newFileText + temp + System.getProperty("line.separator");
+						}
+						
+						reader.close();
+
+						this.outputTextFile("matrix.csv", newFileText);
+						
+						
+					} catch (FileNotFoundException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					
+					
+				} else {
+					
+				}
+				
+			} else {
+				strVisitedURL = strCrawlFileLine.replace("Visited: ", "");
+				iVisitedPos = urlsInCrawlFile.indexOf(strVisitedURL);
+			}
+		}
 	}
 
 	// Read URL and return inputstream 
