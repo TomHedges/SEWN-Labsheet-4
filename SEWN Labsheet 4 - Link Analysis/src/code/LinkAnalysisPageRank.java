@@ -86,82 +86,97 @@ public class LinkAnalysisPageRank {
 	    	adjacencyMatrix = adjacencyMatrix + url + zeroBuilder + System.getProperty("line.separator");
 	    }
 
+		this.outputTextFile("matrix.csv", adjacencyMatrix);
+	    
+		System.out.println("adjacency matrix output!");
+		
 		crawlData = new Scanner(this.accessURL());
 		int iVisitedPos = 0;
 		int iLinkPos = 0;
 		String strVisitedURL = "";
 		String strLinkURL = "";
+		int lineCounter = 0;
 		
 		while (crawlData.hasNextLine()) {
 			String strCrawlFileLine = crawlData.nextLine();
+			lineCounter++;
+			System.out.println("Processing crawl file line: " + lineCounter + " : " + strCrawlFileLine);
 			
 			// if t x
 			if (strCrawlFileLine.trim().startsWith("Link:")) {
 				strLinkURL = strCrawlFileLine.trim().replace("Link: ", "");
 
-				iLinkPos = urlsInCrawlFile.indexOf(strLinkURL);
-				
-				// if link url is not in visited list, then this url is 'dangling' 
-				if (iLinkPos == -1) {
-					//adjacencyMatrix.indexOf(strVisitedURL, 1);
-					
-					int linkCounter = 0;
-					
-					try {
-						BufferedReader reader = new BufferedReader(new FileReader("matrix.csv"));
-						
-						String temp = "";
-						String newFileText = "";
-						int loopCounter = 0;
-						
-						//for (int loopCounter = 0; loopCounter <= iVisitedPos+1; loopCounter++) {
-						while ((temp = reader.readLine()) != null) {	
-							//temp = reader.readLine();
-							loopCounter++;
-							
-							if (loopCounter == (iVisitedPos+2)) {
-								linkCounter = Integer.parseInt(temp.substring(temp.lastIndexOf(",")+1));
-								//temp = temp.substring(temp.lastIndexOf(",")+1);
-								
-								linkCounter = linkCounter + 1;
-
-				                String tokens[] = temp.split(",");
-				                tokens[tokens.length-1] = String.valueOf(linkCounter);
-				                
-				                temp = "";
-				                for (String token : tokens) {
-				                	temp = temp + token + ",";
-				                }
-				                temp = temp.substring(0, temp.length()-1);
-							}
-							
-							newFileText = newFileText + temp + System.getProperty("line.separator");
-						}
-						
-						reader.close();
-
-						this.outputTextFile("matrix.csv", newFileText);
-						
-						
-					} catch (FileNotFoundException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-					
-					
-				} else {
-					
+				iLinkPos = urlsInCrawlFile.indexOf(strLinkURL) + 2;
+				if (iLinkPos == 1) {
+					iLinkPos = urlsInCrawlFile.size() + 2;
 				}
 				
+				//FOR FUTURE REFINEMENT!
+				//this.setMatrixPoint(iVisitedPos, iLinkPos, this.getMatrixPoint(iVisitedPos, iLinkPos) + 1);
+				
+				// if link url is not in visited list, then this url is 'dangling' 
+				
+				
+				
+				
+				//NEED TO REMOVE END "/"
+				//NEED TO REMOVE ANCHORS (#)
+				//NEED TO REMOVE INDEX.HTM/INDEX.HTML   ???
+				//NEED TO HANDLE RELATIVE LINKS!!!!
+				
+				
+				
+				
+				try {
+					BufferedReader reader = new BufferedReader(new FileReader("matrix.csv"));
+					
+					String matrixLine = "";
+					String newFileText = "";
+					int loopCounter = 0;
+					int linkCounter = 0;
+					
+					while ((matrixLine = reader.readLine()) != null) {
+						loopCounter++;
+						
+						if (loopCounter == (iVisitedPos)) {
+			                String tokens[] = matrixLine.split(",");
+			                linkCounter = Integer.parseInt(tokens[iLinkPos-1]);
+							linkCounter = linkCounter + 1;
+			                tokens[iLinkPos-1] = String.valueOf(linkCounter);
+
+							//linkCounter = Integer.parseInt(matrixLine.substring(matrixLine.lastIndexOf(",")+1));
+							//temp = temp.substring(temp.lastIndexOf(",")+1);
+							
+			                matrixLine = "";
+			                for (String token : tokens) {
+			                	matrixLine = matrixLine + token + ",";
+			                }
+			                matrixLine = matrixLine.substring(0, matrixLine.length()-1);
+						}
+						
+						newFileText = newFileText + matrixLine + System.getProperty("line.separator");
+					}
+					
+					reader.close();
+
+					this.outputTextFile("matrix.csv", newFileText);
+					
+					
+				} catch (FileNotFoundException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+					
 			} else {
 				strVisitedURL = strCrawlFileLine.replace("Visited: ", "");
-				iVisitedPos = urlsInCrawlFile.indexOf(strVisitedURL);
+				iVisitedPos = urlsInCrawlFile.indexOf(strVisitedURL) + 2;
 			}
 		}
 	}
+
 
 	// Read URL and return inputstream 
 	private InputStream accessURL() {
